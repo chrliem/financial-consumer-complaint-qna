@@ -1,19 +1,25 @@
+import streamlit as st
 from qa_chain import build_qa_chain
 
-qa_chain = build_qa_chain()
+st.set_page_config(page_title="Financial Complaint QnA", layout="wide")
 
-queries = [
-    "What are the most common issues reported about credit cards?",
-    "Which companies receive the most complaints?",
-    "What problems do consumers report with auto loans?",
-    "Tell me about recurring problems in mortgage services."
-]
+st.title("💬 Financial Consumer Complaint QnA")
+st.write("Ask a question about financial consumer complaints from the CFPB dataset.")
 
-for query in queries:
-    print(f"❓ Query: {query}")
-    result = qa_chain.invoke({"query": query})
-    print("🧠 Answer:\n", result['result'])
-    print("📚 Source documents:")
-    for doc in result['source_documents']:
-        print("-", doc.metadata['source'][:200])
-    print("\n" + "=" * 80 + "\n")
+@st.cache_resource
+def load_chain():
+    return build_qa_chain()
+
+qa_chain = load_chain()
+
+query = st.text_input("Enter your question:", "")
+
+if query:
+    with st.spinner("Generating answer..."):
+        result = qa_chain.invoke({"query": query})
+        st.subheader("🧠 Answer")
+        st.write(result['result'])
+
+        st.subheader("📚 Source Documents")
+        for doc in result['source_documents']:
+            st.markdown(f"- **{doc.metadata['source']}**")
